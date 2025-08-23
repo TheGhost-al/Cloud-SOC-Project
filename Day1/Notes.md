@@ -12,7 +12,7 @@
   nmap -A -Pn <VM_Public_IP>
 Observed open ports (RDP, later HTTP/other services as enabled).
 
-🔹 Defensive Setup
+## 🔹 Defensive Setup
 Created Log Analytics Workspace: SC200-WS.
 
 Enabled Microsoft Sentinel on workspace.
