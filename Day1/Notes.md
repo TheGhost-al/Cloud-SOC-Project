@@ -33,3 +33,14 @@ Failed logons (Event ID 4625) confirmed when testing wrong RDP logins.<img width
 <img width="1919" height="911" alt="Screenshot 2025-08-23 191146" src="https://github.com/user-attachments/assets/ad60ce08-49c6-439f-9f57-7a7c17ec8080" />
 <img width="1912" height="931" alt="Screenshot 2025-08-23 180203" src="https://github.com/user-attachments/assets/82c9e7ce-035d-420a-b134-c8ec84d564dd" />
 <img width="652" height="499" alt="Screenshot 2025-08-23 174933" src="https://github.com/user-attachments/assets/b51af5cf-9d98-442f-b8a0-853fe777ce10" />
+
+
+🔹 Next Steps (Day 2)
+
+Simulate brute-force attack using Hydra.
+
+Detect failed logins (Event ID 4625 flood).
+
+Create Sentinel Analytic Rule for brute-force detection.
+
+Document results as Incident Report #1.
