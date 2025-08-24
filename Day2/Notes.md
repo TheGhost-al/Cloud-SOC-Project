@@ -65,7 +65,7 @@ Multiple failed attempts followed by a success clearly indicate brute-force beha
 
 Detection worked as expected → alert raised in Sentinel.
 
-🔹 Next Steps (Day 3 Plan)
+## 🔹 Next Steps (Day 3 Plan)
 Install IIS on the Azure VM to host a test web application.
 
 Use Gobuster & Burp Suite for directory brute-force and vulnerability testing.
