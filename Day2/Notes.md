@@ -1,75 +1,56 @@
 # Day 2 – Brute Force Attack Detection (RDP)
 
-## 🔹 Offensive Simulation (Attacker Side – Kali & PC)
-- Created a custom password list (`pass.txt`) with weak passwords + correct VM password.
-- Ran Hydra attack against RDP service of Azure VM (`98.70.40.100`):
-
+## 🔹 Offensive Simulation (Hydra)
+- Ran Hydra against the Azure VM RDP service (`98.70.40.100`) using a custom wordlist:
   ```bash
   hydra -l labuser -P pass.txt -t 1 -W 3 rdp://98.70.40.100
-Hydra generated multiple failed login attempts and eventually succeeded when it reached the correct password.
+Hydra generated multiple failed logon attempts and eventually succeeded with the correct password.
 
-Observed ~7 4625 (failed logons) and ~3 4624 (successful logons) generated in Windows Security logs.
+Outcome:
 
-Also performed manual RDP login attempts from local PC to confirm additional failed logons.
+Event ID 4625 (failed logons) created in Windows Security logs.
 
-## 🔹 Defensive Configuration (Azure Sentinel)
-Verified logs in Log Analytics (SC200-WS) using:<img width="1916" height="917" alt="Screenshot 2025-08-24 145347" src="https://github.com/user-attachments/assets/98dd8f08-a31a-4ad7-910c-85dfc539af64" />
-<img width="1916" height="911" alt="Screenshot 2025-08-24 145333" src="https://github.com/user-attachments/assets/09c33898-0eab-4b3a-b210-18fdd1817489" />
-<img width="1917" height="907" alt="Screenshot 2025-08-24 145235" src="https://github.com/user-attachments/assets/6cd7ee8d-5602-4221-8ab9-55b67d10f51c" />
-<img width="1913" height="916" alt="Screenshot 2025-08-24 142718" src="https://github.com/user-attachments/assets/2221bd9c-58f5-4494-95d1-09f4862e85e1" />
-<img width="1909" height="907" alt="Screenshot 2025-08-24 142559" src="https://github.com/user-attachments/assets/3f7fa9c3-e582-49b1-8ac5-3146b1ed131a" />
-<img width="656" height="760" alt="Screenshot 2025-08-24 141811" src="https://github.com/user-attachments/assets/e4981b9c-3f69-4abd-9b70-e6fd0bb04e3d" />
+Event ID 4624 (successful logon) created when the correct password was found.
+
+Hydra Result Screenshot:
+<img width="1287" height="733" alt="Screenshot 2025-09-11 112638" src="https://github.com/user-attachments/assets/53b4aa20-ca74-4b58-a404-bdd872b1b11b" />
 
 
+🔹 Defensive Logs (Azure Sentinel / Log Analytics)
+Query 1 – Verify Failed + Successful Logons
+kusto
+Copy code
 Event
 | where EventLog == "Security" and EventID in (4625, 4624)
 | project TimeGenerated, EventID, UserName
 | order by TimeGenerated desc
-| take 20
-Confirmed presence of both failed (4625) and successful (4624) events.
+Confirmed multiple 4625 (failed) followed by 4624 (success) for labuser.
 
-## 🔹 Analytic Rule Created
-Rule Name: Brute Force: Multiple Failed Logons
+Screenshot:
+<img width="1915" height="914" alt="Screenshot 2025-09-11 112425" src="https://github.com/user-attachments/assets/6e3f1521-1afa-4db3-b523-9f7156e5c93e" />
 
-KQL Query:
 
+Query 2 – Brute Force Detection (≥5 fails in 10 minutes)
+kusto
+Copy code
 Event
 | where EventLog == "Security" and EventID == 4625
 | summarize Failures = count() by UserName, bin(TimeGenerated, 10m)
 | where Failures >= 5
-Schedule: Run every 5 minutes, look back 10 minutes
+Detected brute force against labuser with more than 5 failed attempts in a short time window.
 
-Entity Mapping:
+Screenshot:
+<img width="1913" height="912" alt="Screenshot 2025-09-11 112505" src="https://github.com/user-attachments/assets/2aa221f8-ecdc-4985-89a1-17e2fae1d5c8" />
 
-Account → Name → UserName
 
-Incident Settings: Enabled “Create incidents from alerts”
+🔹 Remediation
+The account labuser was compromised.
 
-## 🔹 Outcome
-After generating 6–7 failed RDP logons within 10 minutes, the analytic rule was triggered.
+Performed password reset on the VM to block attacker persistence.
 
-Sentinel raised an Incident under SC200-WS → Incidents.
+🔹 Outcome
+Successfully simulated and detected an RDP brute-force attack.
 
-Incident contained:
+Verified in Sentinel logs using KQL queries.
 
-UserName: labuser
-
-Total Failures: ≥5
-
-Timeline of failed logons
-
-## 🔹 Observations
-Hydra is noisy and easily detectable by Sentinel’s failed logon correlation.
-
-Multiple failed attempts followed by a success clearly indicate brute-force behavior.
-
-Detection worked as expected → alert raised in Sentinel.
-
-## 🔹 Next Steps (Day 3 Plan)
-Install IIS on the Azure VM to host a test web application.
-
-Use Gobuster & Burp Suite for directory brute-force and vulnerability testing.
-
-Build a Sentinel query/rule to detect web application scanning activity.
-
-Document as Incident Report #2 (Web Attack).
+Applied remediation by resetting the compromised account password.
